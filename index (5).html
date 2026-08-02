@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yugam Saini — Software Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0E1526;
+    --bg-elevated: #16213A;
+    --bg-sidebar: #0A0F1C;
+    --bg-hover: #1C2942;
+    --border: #24304A;
+    --text: #E8EAED;
+    --text-muted: #8B96AC;
+    --text-dim: #56607A;
+    --amber: #E8A33D;
+    --coral: #E8674A;
+    --teal: #4FB6A8;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  a { color:inherit; text-decoration:none; }
+  ::selection { background: var(--amber); color:#0E1526; }
+
+  @media (prefers-reduced-motion: reduce){
+    * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior:auto !important; }
+  }
+
+  /* ---------- Layout shell ---------- */
+  .shell {
+    display:grid;
+    grid-template-columns: 250px 1fr;
+    min-height:100vh;
+  }
+
+  /* ---------- Sidebar (file explorer) ---------- */
+  .sidebar {
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    padding: 28px 0;
+    position: sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+  }
+  .sidebar-brand {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 0 20px 20px;
+    letter-spacing: 0.02em;
+  }
+  .sidebar-brand span { color: var(--teal); }
+  .tree-group-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    padding: 4px 20px;
+    margin-top: 8px;
+  }
+  .tree-item {
+    display:flex;
+    align-items:center;
+    gap: 9px;
+    padding: 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--text-muted);
+    cursor:pointer;
+    border-left: 2px solid transparent;
+    transition: color .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .tree-item:hover { background: var(--bg-hover); color: var(--text); }
+  .tree-item.active {
+    background: var(--bg-elevated);
+    color: var(--amber);
+    border-left-color: var(--amber);
+  }
+  .tree-icon { width:14px; text-align:center; opacity:0.85; font-size:12px; }
+
+  .sidebar-footer {
+    margin-top: 24px;
+    padding: 16px 20px 0;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-footer a {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family: var(--font-mono);
+    font-size:12.5px;
+    color: var(--text-muted);
+    padding: 6px 0;
+    transition: color .15s ease;
+  }
+  .sidebar-footer a:hover { color: var(--teal); }
+
+  /* ---------- Mobile top tab bar ---------- */
+  .mobile-tabs {
+    display:none;
+    background: var(--bg-sidebar);
+    border-bottom: 1px solid var(--border);
+    overflow-x:auto;
+    position: sticky;
+    top:0;
+    z-index: 50;
+  }
+  .mobile-tabs .tree-item { border-left:none; border-bottom:2px solid transparent; white-space:nowrap; padding:12px 16px; }
+  .mobile-tabs .tree-item.active { border-bottom-color: var(--amber); border-left:none; }
+
+  /* ---------- Main editor pane ---------- */
+  .main { min-width:0; }
+  .tabbar {
+    display:flex;
+    align-items:center;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+    position: sticky;
+    top:0;
+    z-index: 40;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    height: 42px;
+  }
+  .tabbar .crumb { padding: 0 14px; color: var(--text-dim); }
+  .tabbar .crumb.current { color: var(--amber); }
+  .tabbar .dot { color: var(--coral); }
+
+  section { padding: 90px 64px; border-bottom: 1px solid var(--border); scroll-margin-top: 42px; }
+  section:last-child { border-bottom:none; }
+  .section-inner { max-width: 760px; }
+
+  .file-label {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--teal);
+    margin-bottom: 18px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .file-label::before { content:"//"; color: var(--text-dim); }
+
+  h1, h2, h3 { font-family: var(--font-display); font-weight:600; }
+
+  /* ---------- Hero ---------- */
+  .hero { padding-top: 110px; padding-bottom: 110px; }
+  .hero-prompt {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 26px;
+  }
+  .hero-prompt .sym { color: var(--teal); }
+  .hero-prompt .typed { color: var(--text); border-right: 2px solid var(--amber); animation: blink 1s step-end infinite; padding-right:2px; }
+  @keyframes blink { 50% { border-color: transparent; } }
+
+  h1.name { font-size: clamp(38px, 5.5vw, 64px); line-height:1.05; letter-spacing:-0.01em; }
+  h1.name .last { color: var(--amber); }
+  .role-line {
+    font-family: var(--font-mono);
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--coral);
+    margin-top: 16px;
+  }
+  .hero-desc { max-width: 560px; color: var(--text-muted); margin-top: 22px; font-size: 16px; }
+  .hero-ctas { display:flex; gap:14px; margin-top: 34px; flex-wrap:wrap; }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition: transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn-primary { background: var(--amber); color: #0E1526; font-weight:600; }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-ghost { border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-2px); }
+
+  .hero-meta { display:flex; gap:22px; margin-top: 46px; flex-wrap:wrap; }
+  .hero-meta div { font-family: var(--font-mono); font-size:12px; color: var(--text-dim); }
+  .hero-meta strong { display:block; font-size: 20px; color: var(--text); font-family: var(--font-display); font-weight:600; margin-bottom:2px; }
+
+  /* ---------- About / markdown style ---------- */
+  .md-h { color: var(--amber); font-family: var(--font-mono); font-size: 15px; margin: 26px 0 10px; }
+  .md-h:first-child { margin-top:0; }
+  .md-h::before { content:"## "; color: var(--text-dim); }
+  p.body-text { color: var(--text-muted); font-size: 15.5px; }
+
+  /* ---------- Experience / log ---------- */
+  .log-entry {
+    display:grid;
+    grid-template-columns: 130px 1fr;
+    gap: 24px;
+    padding: 26px 0;
+    border-top: 1px solid var(--border);
+  }
+  .log-entry:first-of-type { border-top:none; }
+  .log-time { font-family: var(--font-mono); font-size: 12.5px; color: var(--teal); padding-top:3px; }
+  .log-org { font-family: var(--font-display); font-size: 18px; font-weight:600; }
+  .log-role { color: var(--coral); font-family: var(--font-mono); font-size: 13px; margin: 4px 0 12px; }
+  .log-entry ul { color: var(--text-muted); font-size: 14.5px; padding-left: 18px; display:flex; flex-direction:column; gap:6px; }
+  .log-entry li::marker { color: var(--text-dim); }
+
+  /* ---------- Projects ---------- */
+  .project-grid { display:flex; flex-direction:column; gap:16px; }
+  .project-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px 26px;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .project-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .project-head { display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; }
+  .project-name { font-family: var(--font-display); font-size: 18px; font-weight:600; }
+  .project-stack { font-family: var(--font-mono); font-size: 11.5px; color: var(--text-dim); }
+  .project-desc { color: var(--text-muted); font-size: 14.5px; margin-top: 12px; }
+  .lang-dots { display:flex; gap:6px; margin-top:14px; }
+  .lang-dots span { width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+  /* ---------- Skills / json ---------- */
+  .json-block {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    color: var(--text-muted);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 26px 28px;
+    overflow-x:auto;
+  }
+  .json-block .key { color: var(--teal); }
+  .json-block .brace { color: var(--text-dim); }
+  .json-block .arr-item { color: var(--amber); }
+  .json-block .str { color: var(--text); }
+  .json-line { padding-left: 20px; }
+
+  /* ---------- Education ---------- */
+  .edu-item { padding: 20px 0; border-top:1px solid var(--border); display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+  .edu-item:first-of-type { border-top:none; }
+  .edu-school { font-family: var(--font-display); font-weight:600; font-size:16.5px; }
+  .edu-detail { color: var(--text-muted); font-size: 13.5px; margin-top:4px; }
+  .edu-score { font-family: var(--font-mono); color: var(--amber); font-size: 13.5px; text-align:right; white-space:nowrap; }
+  .cert-list { margin-top: 30px; display:flex; flex-direction:column; gap:10px; }
+  .cert-list div { font-family: var(--font-mono); font-size: 13.5px; color: var(--text-muted); display:flex; gap:10px; align-items:center; }
+  .cert-list div::before { content:"✓"; color: var(--teal); }
+
+  /* ---------- Contact ---------- */
+  .contact-term {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 26px 28px;
+  }
+  .contact-term .line { margin-bottom: 10px; color: var(--text-muted); }
+  .contact-term .line .sym { color: var(--teal); }
+  .contact-term a { color: var(--amber); border-bottom: 1px dotted var(--amber); }
+  .contact-term a:hover { color: var(--coral); border-color: var(--coral); }
+
+  footer { padding: 30px 64px; font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 880px){
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display:none; }
+    .mobile-tabs { display:flex; }
+    section { padding: 56px 24px; }
+    .log-entry { grid-template-columns: 1fr; gap:8px; }
+    .hero { padding-top: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mobile-tabs" id="mobileTabs"></div>
+
+<div class="shell">
+  <nav class="sidebar" aria-label="Section navigation">
+    <div class="sidebar-brand">yugam<span>.</span>dev</div>
+
+    <div class="tree-group-label">portfolio/</div>
+    <div class="tree-item" data-target="hero"><span class="tree-icon">◆</span>index.tsx</div>
+    <div class="tree-item" data-target="about"><span class="tree-icon">▤</span>about.md</div>
+    <div class="tree-item" data-target="experience"><span class="tree-icon">▤</span>experience.log</div>
+    <div class="tree-item" data-target="projects"><span class="tree-icon">▸</span>projects/</div>
+    <div class="tree-item" data-target="skills"><span class="tree-icon">{ }</span>skills.json</div>
+    <div class="tree-item" data-target="education"><span class="tree-icon">▤</span>education.txt</div>
+    <div class="tree-item" data-target="contact"><span class="tree-icon">▤</span>contact.sh</div>
+
+    <div class="sidebar-footer">
+      <a href="mailto:yugamsaini51@gmail.com">✉ yugamsaini51@gmail.com</a>
+      <a href="tel:+919518222489">☎ +91-9518-222-489</a>
+      <a href="https://linkedin.com/in/yugam-saini" target="_blank" rel="noopener">in/yugam-saini</a>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="tabbar">
+      <span class="crumb">portfolio</span>
+      <span class="dot">›</span>
+      <span class="crumb current" id="tabCrumb">index.tsx</span>
+    </div>
+
+    <!-- HERO -->
+    <section id="hero" class="hero">
+      <div class="section-inner">
+        <div class="hero-prompt"><span class="sym">$</span> whoami &nbsp;→&nbsp; <span class="typed" id="typedText"></span></div>
+        <h1 class="name">Yugam <span class="last">Saini</span></h1>
+        <div class="role-line">B.Tech CSE, Class of 2027 — Aspiring Software Developer</div>
+        <p class="hero-desc">I build full-stack web applications and explore cloud-based AI tooling, with hands-on grounding in the MERN stack, Java, and Python. Currently sharpening enterprise platform skills through ServiceNow's NextGen Professional Program.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="mailto:yugamsaini51@gmail.com">Get in touch →</a>
+          <a class="btn btn-ghost" href="https://linkedin.com/in/yugam-saini" target="_blank" rel="noopener">View LinkedIn</a>
+        </div>
+        <div class="hero-meta">
+          <div><strong>7.76</strong>CGPA / 10</div>
+          <div><strong>3</strong>Shipped Projects</div>
+          <div><strong>2</strong>Internships / Programs</div>
+          <div><strong>5+</strong>Languages &amp; Stacks</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about">
+      <div class="section-inner">
+        <div class="file-label">about.md</div>
+        <div class="md-h">Summary</div>
+        <p class="body-text">B.Tech Computer Science student with hands-on experience in software development, cloud-based AI tools, and full-stack web applications. Skilled in Java, Python, C++, JavaScript, and the MERN stack, with strong analytical and problem-solving abilities. Passionate about building scalable, user-focused technology solutions — and currently looking for opportunities to apply that as a software developer.</p>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience">
+      <div class="section-inner">
+        <div class="file-label">experience.log</div>
+
+        <div class="log-entry">
+          <div class="log-time">ONGOING</div>
+          <div>
+            <div class="log-org">ServiceNow NextGen Professional Program</div>
+            <div class="log-role">Program Participant</div>
+            <ul>
+              <li>Competitively selected for ServiceNow's mentorship program focused on enterprise ITSM workflows and platform architecture.</li>
+              <li>Gained exposure to industry best practices, workflow automation, and enterprise application development.</li>
+              <li>Strengthened professional collaboration and analytical problem-solving skills.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="log-entry">
+          <div class="log-time">JUN – JUL 2025</div>
+          <div>
+            <div class="log-org">IBM Developer Skills Network</div>
+            <div class="log-role">AI Intern</div>
+            <ul>
+              <li>Built an AI-powered Book Recommendation Chatbot using IBM Watson Assistant.</li>
+              <li>Designed intelligent conversational workflows and recommendation logic.</li>
+              <li>Gained hands-on experience with cloud-based AI deployment and conversational AI tools.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="section-inner">
+        <div class="file-label">projects/</div>
+        <div class="project-grid">
+
+          <div class="project-card">
+            <div class="project-head">
+              <div class="project-name">Learning Management System</div>
+              <div class="project-stack">MongoDB · Express.js · React.js · Node.js</div>
+            </div>
+            <p class="project-desc">A full-stack LMS supporting course management, user authentication, and content delivery — with course enrollment, assignment submission, real-time progress tracking, and role-based access for students and instructors.</p>
+            <div class="lang-dots">
+              <span style="background:var(--teal)"></span>
+              <span style="background:var(--amber)"></span>
+              <span style="background:var(--coral)"></span>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <div class="project-head">
+              <div class="project-name">Library Management System</div>
+              <div class="project-stack">Java · MySQL · Swing</div>
+            </div>
+            <p class="project-desc">A desktop application to manage book inventory, user accounts, and transactions, with search, issue, and return workflows built on secure, database-driven MySQL operations.</p>
+            <div class="lang-dots">
+              <span style="background:var(--amber)"></span>
+              <span style="background:var(--teal)"></span>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <div class="project-head">
+              <div class="project-name">Flashcard Language Learning App</div>
+              <div class="project-stack">HTML · CSS · JavaScript</div>
+            </div>
+            <p class="project-desc">An interactive web app for language learning built around dynamic flashcards, with a spaced repetition algorithm and progress tracking wrapped in a responsive, user-friendly interface.</p>
+            <div class="lang-dots">
+              <span style="background:var(--coral)"></span>
+              <span style="background:var(--amber)"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="section-inner">
+        <div class="file-label">skills.json</div>
+        <div class="json-block">
+          <div><span class="brace">{</span></div>
+          <div class="json-line"><span class="key">"languages"</span>: [<span class="arr-item">"C"</span>, <span class="arr-item">"C++"</span>, <span class="arr-item">"Java"</span>, <span class="arr-item">"Python"</span>, <span class="arr-item">"JavaScript"</span>],</div>
+          <div class="json-line"><span class="key">"web"</span>: [<span class="arr-item">"HTML"</span>, <span class="arr-item">"CSS"</span>, <span class="arr-item">"React.js"</span>, <span class="arr-item">"Node.js"</span>, <span class="arr-item">"Express.js"</span>, <span class="arr-item">"REST APIs"</span>],</div>
+          <div class="json-line"><span class="key">"databases"</span>: [<span class="arr-item">"MySQL"</span>, <span class="arr-item">"MongoDB"</span>, <span class="arr-item">"SQL"</span>],</div>
+          <div class="json-line"><span class="key">"core_cs"</span>: [<span class="arr-item">"Data Structures & Algorithms"</span>, <span class="arr-item">"OOP"</span>, <span class="arr-item">"Operating Systems"</span>, <span class="arr-item">"Computer Networks"</span>, <span class="arr-item">"DBMS"</span>, <span class="arr-item">"Software Engineering"</span>, <span class="arr-item">"Computer Organization"</span>],</div>
+          <div class="json-line"><span class="key">"tools"</span>: [<span class="arr-item">"Git"</span>, <span class="arr-item">"GitHub"</span>, <span class="arr-item">"VS Code"</span>, <span class="arr-item">"Postman"</span>, <span class="arr-item">"IBM Watson Assistant"</span>, <span class="arr-item">"ServiceNow"</span>, <span class="arr-item">"Salesforce"</span>],</div>
+          <div class="json-line"><span class="key">"data_analytics"</span>: [<span class="arr-item">"Excel"</span>, <span class="arr-item">"Structured Data Handling"</span>, <span class="arr-item">"Reporting"</span>, <span class="arr-item">"SQL Fundamentals"</span>],</div>
+          <div class="json-line"><span class="key">"soft_skills"</span>: [<span class="arr-item">"Problem-solving"</span>, <span class="arr-item">"Analytical Thinking"</span>, <span class="arr-item">"Team Collaboration"</span>, <span class="arr-item">"Detail-oriented"</span>, <span class="arr-item">"Works well under pressure"</span>]</div>
+          <div><span class="brace">}</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="education">
+      <div class="section-inner">
+        <div class="file-label">education.txt</div>
+
+        <div class="edu-item">
+          <div>
+            <div class="edu-school">Maharishi Markandeshwar (Deemed to be University)</div>
+            <div class="edu-detail">B.Tech in Computer Science and Engineering · 2023 – Present</div>
+          </div>
+          <div class="edu-score">CGPA 7.76 / 10</div>
+        </div>
+
+        <div class="edu-item">
+          <div>
+            <div class="edu-school">Govt Model Sanskriti Senior Secondary School</div>
+            <div class="edu-detail">Intermediate · 2022 – 2023</div>
+          </div>
+          <div class="edu-score">69%</div>
+        </div>
+
+        <div class="edu-item">
+          <div>
+            <div class="edu-school">Siddharth International School</div>
+            <div class="edu-detail">Matriculation · 2020 – 2021</div>
+          </div>
+          <div class="edu-score">73%</div>
+        </div>
+
+        <div class="cert-list">
+          <div>Salesforce Administrator</div>
+          <div>Salesforce: Master the Essentials</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="section-inner">
+        <div class="file-label">contact.sh</div>
+        <div class="contact-term">
+          <div class="line"><span class="sym">$</span> echo $LOCATION</div>
+          <div class="line">Hansi, Haryana, India</div>
+          <div class="line"><span class="sym">$</span> echo $EMAIL</div>
+          <div class="line"><a href="mailto:yugamsaini51@gmail.com">yugamsaini51@gmail.com</a></div>
+          <div class="line"><span class="sym">$</span> echo $PHONE</div>
+          <div class="line"><a href="tel:+919518222489">+91-9518-222-489</a></div>
+          <div class="line"><span class="sym">$</span> echo $LINKEDIN</div>
+          <div class="line"><a href="https://linkedin.com/in/yugam-saini" target="_blank" rel="noopener">linkedin.com/in/yugam-saini</a></div>
+        </div>
+      </div>
+    </section>
+
+    <footer>© 2026 Yugam Saini — built with intent, not a template.</footer>
+  </main>
+</div>
+
+<script>
+  const treeItems = document.querySelectorAll('.tree-item');
+  const sections = document.querySelectorAll('main section[id]');
+  const tabCrumb = document.getElementById('tabCrumb');
+  const fileNames = {
+    hero: 'index.tsx', about: 'about.md', experience: 'experience.log',
+    projects: 'projects/', skills: 'skills.json', education: 'education.txt', contact: 'contact.sh'
+  };
+
+  // Build mobile tab bar to mirror sidebar
+  const mobileTabs = document.getElementById('mobileTabs');
+  Object.entries(fileNames).forEach(([id, label]) => {
+    const el = document.createElement('div');
+    el.className = 'tree-item';
+    el.dataset.target = id;
+    el.textContent = label;
+    el.addEventListener('click', () => document.getElementById(id).scrollIntoView({behavior:'smooth'}));
+    mobileTabs.appendChild(el);
+  });
+  const mobileTreeItems = document.querySelectorAll('.mobile-tabs .tree-item');
+
+  treeItems.forEach(item => {
+    item.addEventListener('click', () => {
+      document.getElementById(item.dataset.target).scrollIntoView({behavior:'smooth'});
+    });
+  });
+
+  function setActive(id){
+    treeItems.forEach(i => i.classList.toggle('active', i.dataset.target === id));
+    mobileTreeItems.forEach(i => i.classList.toggle('active', i.dataset.target === id));
+    if (tabCrumb) tabCrumb.textContent = fileNames[id] || 'index.tsx';
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) setActive(entry.target.id);
+    });
+  }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+
+  sections.forEach(s => observer.observe(s));
+  setActive('hero');
+
+  // Typing effect in hero
+  const typedEl = document.getElementById('typedText');
+  const phrases = ['Yugam Saini', 'a CSE student', 'a builder'];
+  let pIndex = 0, cIndex = 0, deleting = false;
+
+  function typeLoop(){
+    const current = phrases[pIndex];
+    if (!deleting){
+      cIndex++;
+      typedEl.textContent = current.slice(0, cIndex);
+      if (cIndex === current.length){ deleting = true; setTimeout(typeLoop, 1400); return; }
+    } else {
+      cIndex--;
+      typedEl.textContent = current.slice(0, cIndex);
+      if (cIndex === 0){ deleting = false; pIndex = (pIndex + 1) % phrases.length; }
+    }
+    setTimeout(typeLoop, deleting ? 40 : 80);
+  }
+  typeLoop();
+</script>
+
+</body>
+</html>
